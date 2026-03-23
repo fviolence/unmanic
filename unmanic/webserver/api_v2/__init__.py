@@ -42,6 +42,7 @@ from .pending_api import ApiPendingHandler
 from .plugins_api import ApiPluginsHandler
 from .session_api import ApiSessionHandler
 from .settings_api import ApiSettingsHandler
+from .transfers_api import ApiTransfersHandler
 from .upload_api import ApiUploadHandler
 from .version_api import ApiVersionHandler
 from .workers_api import ApiWorkersHandler
@@ -58,6 +59,7 @@ __all__ = (
     'ApiPluginsHandler',
     'ApiSessionHandler',
     'ApiSettingsHandler',
+    'ApiTransfersHandler',
     'ApiUploadHandler',
     'ApiVersionHandler',
     'ApiWorkersHandler'

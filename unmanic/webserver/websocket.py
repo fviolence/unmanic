@@ -42,6 +42,7 @@ from tornado import gen
 from unmanic import config
 from unmanic.libs import common, session
 from unmanic.libs.frontend_push_messages import FrontendPushMessages
+from unmanic.libs.transfer_tracker import TransferTracker
 from unmanic.libs.uiserver import UnmanicDataQueues, UnmanicRunningTreads
 from unmanic.webserver.helpers import completed_tasks, pending_tasks
 from unmanic.webserver.proxy import resolve_proxy_target
@@ -55,6 +56,7 @@ class UnmanicWebsocketHandler(tornado.websocket.WebSocketHandler):
     sending_worker_info = False
     sending_pending_tasks_info = False
     sending_completed_tasks_info = False
+    sending_transfers_info = False
     close_event = False
 
     def __init__(self, *args, **kwargs):
@@ -127,6 +129,7 @@ class UnmanicWebsocketHandler(tornado.websocket.WebSocketHandler):
         self.stop_workers_info()
         self.stop_pending_tasks_info()
         self.stop_completed_tasks_info()
+        self.stop_transfers_info()
         self.stop_system_logs()
 
     def on_remote_message(self, message):
@@ -277,6 +280,32 @@ class UnmanicWebsocketHandler(tornado.websocket.WebSocketHandler):
         :rtype:
         """
         self.sending_completed_tasks_info = False
+
+    def start_transfers_info(self, params=None):
+        """
+        WS Command - start_transfers_info
+        Start sending information about active file transfers between linked installations.
+
+        :param params:
+        :type params:
+        :return:
+        :rtype:
+        """
+        if not self.sending_transfers_info:
+            self.sending_transfers_info = True
+            tornado.ioloop.IOLoop.current().spawn_callback(self.async_transfers_info)
+
+    def stop_transfers_info(self, params=None):
+        """
+        WS Command - stop_transfers_info
+        Stop sending information about active file transfers.
+
+        :param params:
+        :type params:
+        :return:
+        :rtype:
+        """
+        self.sending_transfers_info = False
 
     def dismiss_message(self, params=None):
         """
@@ -438,3 +467,23 @@ class UnmanicWebsocketHandler(tornado.websocket.WebSocketHandler):
 
             # Sleep for X seconds
             await gen.sleep(3)
+
+    async def async_transfers_info(self):
+        while self.sending_transfers_info:
+            tracker = TransferTracker()
+            transfers = tracker.get_all_transfers()
+
+            # Send message to client
+            await self.send(
+                {
+                    'success':   True,
+                    'server_id': self.server_id,
+                    'type':      'transfers_info',
+                    'data':      {
+                        'results': transfers
+                    },
+                }
+            )
+
+            # Sleep for X seconds
+            await gen.sleep(2)
