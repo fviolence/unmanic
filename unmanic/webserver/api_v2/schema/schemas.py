@@ -1867,3 +1867,100 @@ class WorkerStatusSuccessSchema(BaseSchema):
         many=True,
         validate=validate.Length(min=0),
     )
+
+
+# TRANSFERS
+# =========
+
+class TransferStatusResultsSchema(BaseSchema):
+    """Schema for a single active transfer"""
+
+    transfer_id = fields.Str(
+        required=True,
+        description="Unique identifier for this transfer (RemoteTaskManager thread name)",
+        example="RemoteTaskManager-abc123|M0",
+    )
+    file_name = fields.Str(
+        required=True,
+        description="Basename of the file being transferred",
+        example="movie.mkv",
+    )
+    file_path = fields.Str(
+        required=False,
+        description="Full path of the source file",
+        example="/library/movies/movie.mkv",
+        allow_none=True,
+    )
+    direction = fields.Str(
+        required=True,
+        description="Transfer direction: send, receive, or direct_path",
+        example="send",
+    )
+    from_installation = fields.Str(
+        required=True,
+        description="Origin installation name or address",
+        example="local",
+    )
+    to_installation = fields.Str(
+        required=True,
+        description="Destination installation name or address",
+        example="http://192.168.1.100:8888",
+    )
+    status = fields.Str(
+        required=True,
+        description="Current status: pending, uploading, processing, downloading, complete, failed",
+        example="uploading",
+    )
+    transfer_type = fields.Str(
+        required=True,
+        description="Type of transfer: file_transfer, direct_path_handoff, or unknown",
+        example="file_transfer",
+    )
+    started = fields.Float(
+        required=False,
+        description="Epoch timestamp when the transfer was registered",
+        example=1635746377.0021548,
+        allow_none=True,
+    )
+    task_id = fields.Int(
+        required=False,
+        description="Local task ID",
+        example=1,
+        allow_none=True,
+    )
+    remote_task_id = fields.Int(
+        required=False,
+        description="Remote task ID",
+        example=42,
+        allow_none=True,
+    )
+    bytes_transferred = fields.Int(
+        required=False,
+        description="Bytes transferred so far",
+        example=0,
+        allow_none=True,
+    )
+    bytes_total = fields.Int(
+        required=False,
+        description="Total file size in bytes",
+        example=1073741824,
+        allow_none=True,
+    )
+    last_updated = fields.Float(
+        required=False,
+        description="Epoch timestamp of last status update",
+        example=1635746380.123,
+        allow_none=True,
+    )
+
+
+class TransferStatusSuccessSchema(BaseSchema):
+    """Schema for returning all active transfers"""
+
+    transfers = fields.Nested(
+        TransferStatusResultsSchema,
+        required=True,
+        description="Active transfer results",
+        many=True,
+        validate=validate.Length(min=0),
+    )
